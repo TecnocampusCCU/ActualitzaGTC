@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/ActualitzaGTC" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
