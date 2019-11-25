@@ -71,7 +71,7 @@ import os.path
 Variables globals per a la connexio
 i per guardar el color dels botons
 """
-Versio_modul="V_18.1123"
+Versio_modul="V_Q3.191125"
 micolorArea = None
 micolor = None
 nomBD1=""
@@ -338,7 +338,8 @@ class ActualitzaGTC:
             cur.execute(select)
             vec = cur.fetchall()
             conn.commit()
-        except:
+        except Exception as e:
+            print (e.message, e.args)
             print ("ERROR select Control")
 
             
@@ -362,8 +363,10 @@ class ActualitzaGTC:
             try:
                 cur.execute(update)
                 conn.commit()
-            except:
+            except Exception as e:
+                print (e.message, e.args)
                 print ("ERROR update Control (modificant, paraula clau)")
+
 
             if (not vec[0][1]):
                 create = 'drop table if exists "GTC_Update"."UpdateGTC";\n'
@@ -377,21 +380,24 @@ class ActualitzaGTC:
                 except Exception as e:
                     print ("ERROR create GTC per actualitzar")
                     print (e.message.encode('utf8','strict'), e.args.encode('utf8','strict'))
+                
 
         select = 'select to_char("horaModificacio", \'DD/MM/YY HH24:MI\') from "GTC_Update"."ControlActualitzacio";'
         try:
             cur.execute(select)
             vec = cur.fetchall()
             conn.commit()
-        except:
+        except Exception as e:
+            print (e.message, e.args)
             print ("ERROR select Control")
         self.dlg.text_info.setText("Data de l'inici de la modificació: " + vec[0][0])
         
         uri = QgsDataSourceUri()
         try:
             uri.setConnection(host1,port1,nomBD1,usuari1,contra1)
-        except:
-            print ("Error a la connexio")
+        except Exception as e:
+            print (e.message, e.args)
+            print ("Error a la connexió")
             
             
         sql_total = 'select * from "GTC_Update"."UpdateGTC" order by id'
@@ -433,7 +439,9 @@ class ActualitzaGTC:
             cur.execute(select)
             vec = cur.fetchall()
             conn.commit()
-        except:
+        
+        except Exception as e:
+            print (e.message, e.args)
             print ("ERROR select Control")
         if (not vec[0][1]) and (not vec[0][0]):
             errors.append("El graf no s'ha creat")
@@ -692,7 +700,8 @@ class ActualitzaGTC:
                 update='UPDATE "GTC_Update"."UpdateGTC" SET the_geom = ST_RemovePoint(the_geom, 0) WHERE "id"='+str(vec[x][0])+';'
                 cur.execute(update)
                 conn.commit()
-        except:
+        except Exception as e:
+            print (e.message, e.args)
             print ("ERROR SQL_XARXA")
         
         #==============================================
@@ -719,7 +728,8 @@ class ActualitzaGTC:
                 update='UPDATE "GTC_Update"."UpdateGTC" SET the_geom = ST_AddPoint(the_geom, (select "the_geom" from "GTC_Update"."UpdateGTC_vertices_pgr" where id='+str(vec2[0][0])+'),0) WHERE "id"='+str(vec[x][0])+';'
                 cur.execute(update)
                 conn.commit()
-        except:
+        except Exception as e:
+            print (e.message, e.args)
             print ("ERROR SQL_XARXA")
 
         #==============================================
@@ -746,7 +756,8 @@ class ActualitzaGTC:
                 cur.execute(update)
                 conn.commit()
 
-        except:
+        except Exception as e:
+            print (e.message, e.args)
             print ("ERROR SQL_XARXA")
         
         if conta_errors != 0:
@@ -767,9 +778,9 @@ class ActualitzaGTC:
             html = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd"><html><head><meta name="qrichtext" content="1" /><style type="text/css">p, li { white-space: pre-wrap; }</style></head><body style=" font-family:\'MS Shell Dlg 2\'; font-size:10pt; font-weight:400; font-style:normal;"><div style=\"align:center\"><span style=\"background:#00FF00;font-size:14pt\">GRAF VALIDAT!<\span><\div></body></html>'
             self.dlg.text_info.insertHtml(html)
             self.MouText()
-        except:
-            print ("ERROR update Control (modificant,modificat, paraula clau, timestamp)")
-        
+        except Exception as e:
+            print (e.message, e.args)
+            print ("ERROR update Control (modificant,modificat, paraula clau, timestamp")
 
         
         self.barraEstat_connectat()
