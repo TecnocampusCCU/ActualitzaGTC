@@ -27,7 +27,7 @@ import os
 from os.path import expanduser
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QApplication,QSizePolicy,QGridLayout,QDialogButtonBox,QFileDialog,QDockWidget,QProgressBar,QInputDialog,QLineEdit
+from PyQt5.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QApplication,QSizePolicy,QGridLayout,QDialogButtonBox,QFileDialog,QDockWidget,QProgressBar,QInputDialog,QLineEdit,QToolBar
 from qgis.core import QgsMapLayer
 from qgis.core import QgsDataSourceUri
 from qgis.core import QgsVectorLayer
@@ -71,7 +71,7 @@ import os.path
 Variables globals per a la connexio
 i per guardar el color dels botons
 """
-Versio_modul="V_Q3.191125"
+Versio_modul="V_Q3.200108"
 micolorArea = None
 micolor = None
 nomBD1=""
@@ -132,8 +132,16 @@ class ActualitzaGTC:
         self.actions = []
         self.menu = self.tr('&CCU')
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar('CCU')
-        self.toolbar.setObjectName('Actualitza GTC')
+        #self.toolbar = self.iface.addToolBar('CCU')
+        #self.toolbar.setObjectName('Actualitza GTC')
+        trobat=False
+        for x in iface.mainWindow().findChildren(QToolBar,'CCU'): 
+            self.toolbar = x
+            trobat=True
+        
+        if not trobat:
+            self.toolbar = self.iface.addToolBar('CCU')
+            self.toolbar.setObjectName('CCU')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -241,9 +249,10 @@ class ActualitzaGTC:
             self.iface.removePluginMenu(
                 self.tr('&ActualitzaGTC'),
                 action)
-            self.iface.removeToolBarIcon(action)
+            #self.iface.removeToolBarIcon(action)
+            self.toolbar.removeAction(action)
         # remove the toolbar
-        del self.toolbar
+        #del self.toolbar
 
 
     def on_click_Sortir(self):
