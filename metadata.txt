@@ -10,7 +10,7 @@
 name=ActualitzaGTC
 qgisMinimumVersion=3.0
 description=ActualitzaGTC
-version=Q3.200108
+version=Q3.200114
 author=CCU
 email=jlopez@tecnocampus.cat
 
