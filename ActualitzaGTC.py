@@ -22,56 +22,30 @@
  ***************************************************************************/
 """
 
-import sys
 import os
+import os.path
 from os.path import expanduser
+
+import psycopg2
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QApplication,QSizePolicy,QGridLayout,QDialogButtonBox,QFileDialog,QDockWidget,QProgressBar,QInputDialog,QLineEdit,QToolBar
-from qgis.core import QgsMapLayer
-from qgis.core import QgsDataSourceUri
-from qgis.core import QgsVectorLayer
-from qgis.core import QgsVectorFileWriter
-from qgis.core import QgsGraduatedSymbolRenderer
-from qgis.core import QgsCategorizedSymbolRenderer
-from qgis.core import QgsGradientColorRamp
-from qgis.core import QgsProject
-from qgis.core import QgsRendererRange
-from qgis.core import QgsSymbol
-from qgis.core import QgsFillSymbol
-from qgis.core import QgsLineSymbol
-from qgis.core import QgsSymbolLayerRegistry
-from qgis.core import QgsRandomColorRamp
-from qgis.core import QgsRendererRangeLabelFormat
-from qgis.core import QgsProject
-from qgis.core import QgsLayerTreeLayer
-from qgis.core import QgsRenderContext
-from qgis.core import QgsPalLayerSettings
-from qgis.core import QgsTextFormat
-from qgis.core import QgsTextBufferSettings
-from qgis.core import QgsVectorLayerSimpleLabeling
-from qgis.core import QgsProcessingFeedback, Qgis
-from qgis.gui import QgsMessageBar
-import psycopg2
-import unicodedata
-import datetime
-import time
-from qgis.utils import iface
 from PyQt5.QtSql import *
-import datetime
-import time
+from PyQt5.QtWidgets import (QAction, QApplication, QInputDialog, QLineEdit,
+                             QMessageBox, QToolBar)
+from qgis.core import (QgsDataSourceUri, QgsLayerTreeLayer, QgsProject,
+                       QgsRenderContext, QgsVectorLayer)
+from qgis.utils import iface
 
-# Initialize Qt resources from file resources.py
-from .resources import *
 # Import the code for the dialog
 from .ActualitzaGTC_dialog import ActualitzaGTCDialog
-import os.path
+# Initialize Qt resources from file resources.py
+from .resources import *
 
 """
 Variables globals per a la connexio
 i per guardar el color dels botons
 """
-Versio_modul="V_Q3.200114"
+Versio_modul="V_Q3.240701"
 micolorArea = None
 micolor = None
 nomBD1=""
@@ -251,8 +225,6 @@ class ActualitzaGTC:
                 action)
             #self.iface.removeToolBarIcon(action)
             self.toolbar.removeAction(action)
-        # remove the toolbar
-        #del self.toolbar
 
 
     def on_click_Sortir(self):
@@ -278,7 +250,7 @@ class ActualitzaGTC:
         predefInList = None
         for elem in list:
             try:
-                item = QStandardItem(unicode(elem))
+                item = QStandardItem(str(elem))
             except TypeError:
                 item = QStandardItem(str(elem))
             model.appendRow(item)
@@ -310,7 +282,6 @@ class ActualitzaGTC:
     def on_click_CarregarAux(self,label):
         qid = QInputDialog()
         title = "Afegeix la paraula clau"
-        #label = "Name: "
         mode = QLineEdit.Normal
         default = ""
         text, ok = QInputDialog.getText(qid, title, label, mode, default)
@@ -434,7 +405,6 @@ class ActualitzaGTC:
             QApplication.processEvents()
             ''''S'afegeix la capa a la pantalla'''
             iface.mapCanvas().refresh()
-            #qgis.utils.iface.legendInterface().refreshLayerSymbology(vlayer)
         else:
             print ("No s'ha carregat la capa")
 
@@ -457,7 +427,6 @@ class ActualitzaGTC:
 
         return errors
 
-    
     def on_click_Inici(self):
         llistaErrors = self.controlErrorsValida()
         if len(llistaErrors) != 0:
@@ -565,7 +534,6 @@ class ActualitzaGTC:
                     QApplication.processEvents()
                     ''''S'afegeix la capa a la pantalla'''
                     iface.mapCanvas().refresh()
-                    #qgis.utils.iface.legendInterface().refreshLayerSymbology(vlayer)
                 else:
                     print ("No s'ha carregat la capa de punts")
                 self.barraEstat_connectat()
@@ -646,21 +614,19 @@ class ActualitzaGTC:
         self.MouText()
         QApplication.processEvents()
             
-        
         #==============================================
         #    1. LINIES AMB DOS PUNTS I CAMP SOURCE
         #==============================================
+
         self.barraEstat_processant()   
         sql_xarxa = 'select distinct(R.id) id,R.source Vertex, camp from (select S."the_geom",S."id",st_x(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_startpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr")) union ';
         sql_xarxa +='select S."the_geom",S."id",st_x(st_endpoint(S."the_geom")),S."target", \'T\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_endpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
         sql_xarxa +='select S."the_geom",S."id",st_y(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_startpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
         sql_xarxa +='select S."the_geom",S."id",st_y(st_endpoint(S."the_geom")),S."target",\'T\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_endpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )))R where (ST_NPoints(R.the_geom)=2 and R.camp=\'S\') order by R.id,R.source;';
-        #print sql_xarxa
         try:
             cur.execute(sql_xarxa)
             vec = cur.fetchall()
             conta_errors+=len(vec)
-            #print str(len(vec))
             for x in range (0,len(vec)):
                 sql_1='select "source","target" from "GTC_Update"."UpdateGTC" where "id"='+str(vec[x][0])+';'
                 cur.execute(sql_1)
@@ -680,19 +646,19 @@ class ActualitzaGTC:
         except Exception as e:
             print (e.message, e.args)
             print ("ERROR SQL_XARXA")
+
         #==============================================
         #    2. LINIES AMB DOS PUNTS I CAMP TARGET
         #==============================================
+
         sql_xarxa = 'select distinct(R.id) id,R.source Vertex, camp from (select S."the_geom",S."id",st_x(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_startpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr")) union ';
         sql_xarxa +='select S."the_geom",S."id",st_x(st_endpoint(S."the_geom")),S."target", \'T\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_endpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
         sql_xarxa +='select S."the_geom",S."id",st_y(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_startpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
         sql_xarxa +='select S."the_geom",S."id",st_y(st_endpoint(S."the_geom")),S."target",\'T\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_endpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )))R where (ST_NPoints(R.the_geom)=2 and R.camp=\'T\') order by R.id,R.source;';
-        #print sql_xarxa
         try:
             cur.execute(sql_xarxa)
             vec = cur.fetchall()
             conta_errors+=len(vec)
-            #print str(len(vec))
             for x in range (0,len(vec)):
                 sql_1='select "source","target" from "GTC_Update"."UpdateGTC" where "id"='+str(vec[x][0])+';'
                 cur.execute(sql_1)
@@ -721,12 +687,10 @@ class ActualitzaGTC:
         sql_xarxa +='select S."the_geom",S."id",st_x(st_endpoint(S."the_geom")),S."target", \'T\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_endpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
         sql_xarxa +='select S."the_geom",S."id",st_y(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_startpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
         sql_xarxa +='select S."the_geom",S."id",st_y(st_endpoint(S."the_geom")),S."target",\'T\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_endpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )))R where (ST_NPoints(R.the_geom)<>2 and R.camp=\'S\') order by R.id,R.source;';
-        #print sql_xarxa
         try:
             cur.execute(sql_xarxa)
             vec = cur.fetchall()
             conta_errors+=len(vec)
-            #print str(len(vec))
             for x in range (0,len(vec)):
                 sql_1='select "source","target" from "GTC_Update"."UpdateGTC" where "id"='+str(vec[x][0])+';'
                 cur.execute(sql_1)
@@ -744,16 +708,15 @@ class ActualitzaGTC:
         #==============================================
         #    4. LINIES AMB MES DE DOS PUNTS I CAMP TARGET
         #==============================================
-        sql_xarxa = 'select distinct(R.id) id,R.source Vertex, camp from (select S."the_geom",S."id",st_x(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_startpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr")) union ';
-        sql_xarxa +='select S."the_geom",S."id",st_x(st_endpoint(S."the_geom")),S."target", \'T\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_endpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
-        sql_xarxa +='select S."the_geom",S."id",st_y(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_startpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union ';
-        sql_xarxa +='select S."the_geom",S."id",st_y(st_endpoint(S."the_geom")),S."target",\'T\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_endpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )))R where (ST_NPoints(R.the_geom)<>2 and R.camp=\'T\') order by R.id,R.source;';
-        #print sql_xarxa
+
+        sql_xarxa = 'select distinct(R.id) id,R.source Vertex, camp from (select S."the_geom",S."id",st_x(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_startpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr")) union '
+        sql_xarxa +='select S."the_geom",S."id",st_x(st_endpoint(S."the_geom")),S."target", \'T\' camp from "GTC_Update"."UpdateGTC" S where (st_x(st_endpoint(S."the_geom")) not in (select st_x("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union '
+        sql_xarxa +='select S."the_geom",S."id",st_y(st_startpoint(S."the_geom")),S."source",\'S\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_startpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )) union '
+        sql_xarxa +='select S."the_geom",S."id",st_y(st_endpoint(S."the_geom")),S."target",\'T\' camp from "GTC_Update"."UpdateGTC" S where (st_y(st_endpoint(S."the_geom")) not in (select st_y("GTC_Update"."UpdateGTC_vertices_pgr"."the_geom") from "GTC_Update"."UpdateGTC_vertices_pgr" )))R where (ST_NPoints(R.the_geom)<>2 and R.camp=\'T\') order by R.id,R.source;'
         try:
             cur.execute(sql_xarxa)
             vec = cur.fetchall()
             conta_errors+=len(vec)
-            #print str(len(vec))
             for x in range (0,len(vec)):
                 sql_1='select "source","target" from "GTC_Update"."UpdateGTC" where "id"='+str(vec[x][0])+';'
                 cur.execute(sql_1)
@@ -778,7 +741,6 @@ class ActualitzaGTC:
         self.dlg.text_info.setText(textBox)
         self.MouText()
         
-        #UPDATE CAMPS DE CONTROL
         update = 'UPDATE "GTC_Update"."ControlActualitzacio" set modificant = false, modificat=true, "horaModificacio" = NULL, "usuariModificador" = NULL;'
 
         try:
