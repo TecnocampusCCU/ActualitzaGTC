@@ -10,7 +10,7 @@
 name=ActualitzaGTC
 qgisMinimumVersion=3.0
 description=ActualitzaGTC
-version=Q3.240701
+version=Q4.251002
 author=CCU
 email=jlopez@tecnocampus.cat
 
@@ -37,3 +37,5 @@ experimental=True
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
 
+# Add Qt6 compatibility
+supportsQt6=True

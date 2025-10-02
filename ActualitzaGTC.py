@@ -27,10 +27,10 @@ import os.path
 from os.path import expanduser
 
 import psycopg2
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtSql import *
-from PyQt5.QtWidgets import (QAction, QApplication, QInputDialog, QLineEdit,
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtSql import *
+from qgis.PyQt.QtWidgets import (QAction, QApplication, QInputDialog, QLineEdit,
                              QMessageBox, QToolBar)
 from qgis.core import (QgsDataSourceUri, QgsLayerTreeLayer, QgsProject,
                        QgsRenderContext, QgsVectorLayer)
@@ -45,7 +45,7 @@ from .resources import *
 Variables globals per a la connexio
 i per guardar el color dels botons
 """
-Versio_modul="V_Q3.240701"
+Versio_modul="V_Q4.251002"
 micolorArea = None
 micolor = None
 nomBD1=""
@@ -282,7 +282,7 @@ class ActualitzaGTC:
     def on_click_CarregarAux(self,label):
         qid = QInputDialog()
         title = "Afegeix la paraula clau"
-        mode = QLineEdit.Normal
+        mode = QLineEdit.EchoMode.Normal
         default = ""
         text, ok = QInputDialog.getText(qid, title, label, mode, default)
         return text
@@ -814,7 +814,7 @@ class ActualitzaGTC:
 
     def MouText(self):
         newCursor=QTextCursor(self.dlg.text_info.document())
-        newCursor.movePosition(QTextCursor.End)
+        newCursor.movePosition(QTextCursor.MoveOperation.End)
         self.dlg.text_info.setTextCursor(newCursor)
     
     def barraEstat_processant(self):
@@ -851,7 +851,7 @@ class ActualitzaGTC:
         self.populateComboBox(self.dlg.comboConnexio ,conn,'Selecciona connexió',True)
 
         # Run the dialog event loop
-        result = self.dlg.exec_()
+        result = self.dlg.exec()
         # See if OK was pressed
         if result:
             # Do something useful here - delete the line containing pass and
